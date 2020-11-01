@@ -1,0 +1,12 @@
+<section class="row">
+
+<%= RayStage.Orchestrator.num_ray_workers %> active workers
+
+<br />
+</section>
+
+<canvas
+  id="render-display"
+  phx-hook="RenderDisplay"
+  height="<%= RayStage.Camera.height %>"
+  width="<%= RayStage.Camera.width %>"></canvas>
