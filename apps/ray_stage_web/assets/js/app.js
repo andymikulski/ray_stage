@@ -33,6 +33,15 @@ const binary_to_rgb = x => Math.round(x * 255)
 let displayedColor;
 const existingColors = {};
 
+let idx;
+let r;
+let g;
+let b;
+
+let drawingImage = new ImageData(1,1);
+let drawingData = drawingImage.data;
+drawingData[3]   = 255;
+
 const hooks = {
   'RenderDisplay': {
     mounted() {
@@ -51,32 +60,57 @@ const hooks = {
     tick() {
       i = 0;
       start = Date.now();
-      while(i < this.toProcess.length && start - Date.now() < thirty_fps) {
-        pix = this.toProcess.shift();
+      // console.log('before start', this.toProcess.length)
+      while(i < this.toProcess.length){ // } && start - Date.now() < thirty_fps) {
+        idx = this.toProcess[i];
+        r = this.toProcess[i + 1];
+        g = this.toProcess[i + 2];
+        b = this.toProcess[i + 3];
+
+        existingColors[idx] = existingColors[idx] || [r,g,b];
+
+        // r = Math.sqrt(((1 - (0.5)) * (r * r)) + ((0.5) * (existingColors[idx][0] * existingColors[idx][0])))
+        // g = Math.sqrt(((1 - (0.5)) * (g * g)) + ((0.5) * (existingColors[idx][1] * existingColors[idx][1])))
+        // b = Math.sqrt(((1 - (0.5)) * (g * g)) + ((0.5) * (existingColors[idx][2] * existingColors[idx][2])))
+
+        r = (r + existingColors[idx][0]) / 2.0;
+        g = (g + existingColors[idx][1]) / 2.0;
+        b = (b + existingColors[idx][2]) / 2.0;
+
+
+        // pix = this.toProcess.shift();
         // pix[0] // pixel idx
-        existingColors[pix[0]] = existingColors[pix[0]] || pix[1];
+        // existingColors[pix[0]] = existingColors[pix[0]] || pix[1];
 
-        displayedColor = pix[1].map((val,idx)=>{
-          // return (val + existingColors[pix[0]][idx] ) / 2;
-          // return Math.min((val + existingColors[pix[0]][idx]) / 2, 1)
-          return Math.sqrt((1 - (0.5)) * (val * val) + (0.5) * (existingColors[pix[0]][idx] * existingColors[pix[0]][idx]))
-        });
+        // displayedColor = pix[1].map((val,idx)=>{
+        //   // return (val + existingColors[pix[0]][idx] ) / 2;
+        //   // return Math.min((val + existingColors[pix[0]][idx]) / 2, 1)
+        //   return Math.sqrt((1 - (0.5)) * (val * val) + (0.5) * (existingColors[pix[0]][idx] * existingColors[pix[0]][idx]))
+        // });
 
-        existingColors[pix[0]] = displayedColor;
+        // existingColors[pix[0]] = displayedColor;
 
         // pix[1] // [r,g,b] in ranging [0,1]
-        y = (pix[0] / width) | 0;
-        x = pix[0] - (y * width);
+        y = (idx / width) | 0;
+        x = idx - (y * width);
 
-        this.context.beginPath();
-        this.context.rect(x, y, 1, 1);
-        this.context.fillStyle = 'rgb(' + (displayedColor.map(binary_to_rgb).join(',')) + ')';
-        this.context.fill();
-        this.context.closePath();
+        // this.context.beginPath();
+        // this.context.rect(x, y, 1, 1);
+        // this.context.fillStyle = 'rgb(' + r + ',' + g + ',' + b + ')';
+        // this.context.fill();
+        // this.context.closePath();
 
-        i += 1;
+        drawingData[0]   = r;
+        drawingData[1]   = g;
+        drawingData[2]   = b;
+        this.context.putImageData( drawingImage, x, y );
+
+        existingColors[idx] = [r,g,b]
+        i += 4;
       }
-      // requestIdleCallback(this.tick.bind(this),{ timeout: 1000 / 24 });
+      this.toProcess = this.toProcess.slice(i);
+      // console.log('after', this.toProcess.length, i)
+      // requestIdleCallback(this.tick.bind(this)); //,{ timeout: 1000 / 24 });
       requestAnimationFrame(this.tick.bind(this));
     }
   }

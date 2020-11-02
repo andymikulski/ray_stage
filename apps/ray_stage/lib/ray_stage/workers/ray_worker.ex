@@ -70,39 +70,12 @@ defmodule RayStage.RayWorker do
   def handle_events(pixel_queue, _from, state) do
     # pixel_queue = Enum.map(pixel_queue, & &1 * state)
 
-    %{
-      origin: origin,
-      horizontal: horizontal,
-      vertical: vertical,
-      lower_left_corner_vec: lower_left_corner_vec,
-      image_width: image_width,
-      image_height: image_height,
-    } = RayStage.Camera.get_info()
+    camera_info = RayStage.Camera.get_info()
 
 
     output =
       for pix_idx <- pixel_queue do
-
-        # todo: multiple runs and averages so the uniform antialiasing works
-
-        # pix_idx = x + (y * image_width)
-        y = (pix_idx / image_width) |> trunc()
-        x = pix_idx - (y * image_width)
-
-        u = (x + (:rand.uniform() * 4)) / (image_width-1)
-        v = (y + (:rand.uniform() * 4)) / (image_height-1)
-
-        ray_dir =
-          lower_left_corner_vec
-          |> Vec3.add(  Vec3.scale(horizontal, u) )
-          |> Vec3.add(  Vec3.scale(vertical, v) )
-          |> Vec3.subtract(origin)
-
-
-        ray = Ray.create(origin, ray_dir)
-
-        # return {idx, color} for rendering
-        {pix_idx, ray_color(ray)}
+        {pix_idx, average_ray(camera_info, pix_idx, 4)}
       end
 
     # simulate complex work
@@ -110,4 +83,50 @@ defmodule RayStage.RayWorker do
 
     {:noreply, output, state}
   end
+
+  def blend_colors({oR, oG, oB} = color_one, {tR, tG, tB} = color_two, amount \\ 0.8 ) do
+    {
+      :math.sqrt(((1 - (amount)) * (oR * oR)) + ((amount) * (tR * tR))),
+      :math.sqrt(((1 - (amount)) * (oG * oG)) + ((amount) * (tG * tG))),
+      :math.sqrt(((1 - (amount)) * (oB * oB)) + ((amount) * (tB * tB)))
+    }
+  end
+
+  def random_offset() do
+    :rand.uniform()
+    |> Kernel.*(if :rand.uniform() < 0.5, do: -1, else: 1)
+  end
+
+  def average_ray(camera_info, pix_idx, iterations \\ 4) do
+    %{
+      origin: origin,
+      horizontal: horizontal,
+      vertical: vertical,
+      lower_left_corner_vec: lower_left_corner_vec,
+      image_width: image_width,
+      image_height: image_height,
+    } = camera_info
+
+    (1..iterations)
+    |> Enum.reduce(Vec3.create(0,0,0), fn(_iter, acc) ->
+      y = (pix_idx / image_width) |> trunc()
+      x = pix_idx - (y * image_width)
+
+      u = (x + (random_offset() * 1)) / (image_width-1)
+      v = (y + (random_offset() * 1)) / (image_height-1)
+
+      ray_dir =
+        lower_left_corner_vec
+        |> Vec3.add(  Vec3.scale(horizontal, u) )
+        |> Vec3.add(  Vec3.scale(vertical, v) )
+        |> Vec3.subtract(origin)
+
+      ray = Ray.create(origin, ray_dir)
+
+      acc
+      |> blend_colors(ray_color(ray), 0.25)
+    end)
+
+  end
+
 end

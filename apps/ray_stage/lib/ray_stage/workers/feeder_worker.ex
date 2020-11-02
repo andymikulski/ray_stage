@@ -24,6 +24,8 @@ defmodule RayStage.FeederWorker do
     pixel_queue = Enum.to_list(cursor..next_cap)
     overflow = demand - (next_cap - cursor)
 
+    Process.sleep(1)
+
     if (overflow > 0 and next_cap == max_index) do
       {:noreply, pixel_queue ++ Enum.to_list(0..overflow), state |> Map.put(:cursor, overflow)}
     else

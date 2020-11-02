@@ -32,20 +32,20 @@ defmodule RayStage.RenderWorker do
     {:noreply, [], state}
   end
 
-  def get_brightness({_idx, {r, g, b}}) do
-    brightness = (0.299*r) + (0.587*g) + (0.114*b)
+  # def get_brightness({_idx, {r, g, b}}) do
+  #   brightness = (0.299*r) + (0.587*g) + (0.114*b)
 
-    # cond do
-    #   brightness <= 85 -> "░"
-    #   brightness > 85 and brightness < 170 -> "▒"
-    #   true -> "▓"
-    # end
+  #   # cond do
+  #   #   brightness <= 85 -> "░"
+  #   #   brightness > 85 and brightness < 170 -> "▒"
+  #   #   true -> "▓"
+  #   # end
 
-    cond do
-      brightness <= 0.3333 -> "C"
-      brightness > 0.3333 and brightness <= 0.6666 -> "B"
-      true -> "A"
-    end
+  #   cond do
+  #     brightness <= 0.3333 -> "C"
+  #     brightness > 0.3333 and brightness <= 0.6666 -> "B"
+  #     true -> "A"
+  #   end
 
-  end
+  # end
 end

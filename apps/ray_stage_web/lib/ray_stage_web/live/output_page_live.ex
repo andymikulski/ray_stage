@@ -32,23 +32,38 @@ defmodule RayStageWeb.OutputPageLive do
   #     socket
   #     |> add_to_pending(incoming_pixels)
   #   }
-  # end
+  # ende
+
+  def format_pix({idx, color_tup} = _processed_pixel) do
+    [
+      idx,
+      # [
+        (elem(color_tup, 0) * 255) |> trunc(),
+        (elem(color_tup, 1) * 255) |> trunc(),
+        (elem(color_tup, 2) * 255) |> trunc()
+      # ]
+    ]
+  end
 
   def handle_info({:pixel_updates, incoming_pixels}, socket) do
     # Process.send_after(self(), :send_updates, 10)
     pending =
       # socket.assigns.pending
       incoming_pixels
-      |> Enum.map(fn {idx, color_tup} ->
-        [idx, color_tup |> Tuple.to_list()]
-      end)
+      |> Stream.map(&format_pix/1)
+      # |> Enum.take(4)
+      |> Enum.to_list()
+      |> List.flatten()
+      # |> Stream.map(fn {idx, color_tup} -> [idx, color_tup |> Tuple.to_list()] end)
+      # |> Enum.to_list()
+      # |> List.flatten()
+
 
     {
       :noreply,
       socket
-      |> push_event("pixel_update", %{ pixels: pending })
+      |> push_event("pixel_update", %{ pixels: pending})
       # |> add_to_pending(incoming_pixels)
-
     }
   end
 
