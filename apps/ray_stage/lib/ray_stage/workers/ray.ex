@@ -15,6 +15,7 @@ defmodule RayStage.Ray do
   end
 
   def project(%__MODULE__{} = ray, time) when time |> is_number() do
-    Vec3.add(ray.origin, Vec3.scale(time, ray.direction))
+    ray.origin
+    |> Vec3.add(Vec3.scale(ray.direction, time))
   end
 end

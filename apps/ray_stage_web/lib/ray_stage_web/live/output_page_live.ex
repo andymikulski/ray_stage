@@ -35,37 +35,46 @@ defmodule RayStageWeb.OutputPageLive do
   # end
 
   def handle_info({:pixel_updates, incoming_pixels}, socket) do
-    Process.send_after(self(), :send_updates, 10)
-    {
-      :noreply,
-      socket
-      |> add_to_pending(incoming_pixels)
-    }
-  end
-
-  def add_to_pending(socket, incoming_pixels) do
-    socket
-    |> assign(:has_update_pending?, true)
-    |> assign(:pending, socket.assigns.pending ++ incoming_pixels)
-  end
-
-
-  def handle_info(:send_updates, %{ assigns: %{ pending: []  }} = socket) do
-    {:noreply, socket}
-  end
-
-  def handle_info(:send_updates, socket) do
+    # Process.send_after(self(), :send_updates, 10)
     pending =
-      socket.assigns.pending
+      # socket.assigns.pending
+      incoming_pixels
       |> Enum.map(fn {idx, color_tup} ->
         [idx, color_tup |> Tuple.to_list()]
       end)
 
-    {:noreply,
+    {
+      :noreply,
       socket
-      |> assign(:pending, [])
       |> push_event("pixel_update", %{ pixels: pending })
-      # |> update(:pixels, fn pixels -> pixels ++ incoming_pixels end)
+      # |> add_to_pending(incoming_pixels)
+
     }
   end
+
+  # def add_to_pending(socket, incoming_pixels) do
+  #   socket
+  #   |> assign(:has_update_pending?, true)
+  #   |> assign(:pending, socket.assigns.pending ++ incoming_pixels)
+  # end
+
+
+  # def handle_info(:send_updates, %{ assigns: %{ pending: []  }} = socket) do
+  #   {:noreply, socket}
+  # end
+
+  # def handle_info(:send_updates, socket) do
+  #   pending =
+  #     socket.assigns.pending
+  #     |> Enum.map(fn {idx, color_tup} ->
+  #       [idx, color_tup |> Tuple.to_list()]
+  #     end)
+
+  #   {:noreply,
+  #     socket
+  #     |> assign(:pending, [])
+  #     |> push_event("pixel_update", %{ pixels: pending })
+  #     # |> update(:pixels, fn pixels -> pixels ++ incoming_pixels end)
+  #   }
+  # end
 end

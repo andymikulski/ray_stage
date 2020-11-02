@@ -30,6 +30,9 @@ let y = 0;
 let x = 0;
 let width = 0;
 const binary_to_rgb = x => Math.round(x * 255)
+let displayedColor;
+const existingColors = {};
+
 const hooks = {
   'RenderDisplay': {
     mounted() {
@@ -39,7 +42,8 @@ const hooks = {
       console.log('Render Display mounted')
 
       this.handleEvent("pixel_update", ({pixels}) => {
-        this.toProcess = this.toProcess.concat(pixels);
+        Array.prototype.push.apply(this.toProcess, pixels);
+        // console.log('incoming', pixels.length);
       });
 
       this.tick();
@@ -50,13 +54,23 @@ const hooks = {
       while(i < this.toProcess.length && start - Date.now() < thirty_fps) {
         pix = this.toProcess.shift();
         // pix[0] // pixel idx
+        existingColors[pix[0]] = existingColors[pix[0]] || pix[1];
+
+        displayedColor = pix[1].map((val,idx)=>{
+          // return (val + existingColors[pix[0]][idx] ) / 2;
+          // return Math.min((val + existingColors[pix[0]][idx]) / 2, 1)
+          return Math.sqrt((1 - (0.5)) * (val * val) + (0.5) * (existingColors[pix[0]][idx] * existingColors[pix[0]][idx]))
+        });
+
+        existingColors[pix[0]] = displayedColor;
+
         // pix[1] // [r,g,b] in ranging [0,1]
         y = (pix[0] / width) | 0;
         x = pix[0] - (y * width);
 
         this.context.beginPath();
         this.context.rect(x, y, 1, 1);
-        this.context.fillStyle = 'rgb(' + (pix[1].map(binary_to_rgb).join(',')) + ')';
+        this.context.fillStyle = 'rgb(' + (displayedColor.map(binary_to_rgb).join(',')) + ')';
         this.context.fill();
         this.context.closePath();
 

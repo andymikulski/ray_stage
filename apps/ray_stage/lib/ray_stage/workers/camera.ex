@@ -1,8 +1,8 @@
 defmodule RayStage.Camera do
   alias Graphmath.Vec3
 
-  def width, do: 640
-  def height, do: 480
+  def width, do: 640 #trunc(320 * (16/9))
+  def height, do: 480 # 320
 
   def get_info() do
     aspect_ratio = __MODULE__.width / __MODULE__.height

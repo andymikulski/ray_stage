@@ -1,7 +1,7 @@
 defmodule RayStage.Orchestrator do
   use GenServer
 
-  def num_ray_workers, do: 8
+  def num_ray_workers, do: 4
 
   def start_link(_options \\ []) do
     GenServer.start_link(__MODULE__, nil)
@@ -9,8 +9,8 @@ defmodule RayStage.Orchestrator do
 
   @impl true
   def init(state) do
-    IO.puts "here in 5"
-    Process.send_after(self(), :start, 5000)
+    IO.puts "here in 2"
+    Process.send_after(self(), :start, 2500)
 
     {:ok, state}
   end
@@ -25,11 +25,11 @@ defmodule RayStage.Orchestrator do
     #        ↘  ray ↗
 
 
-    for i <- 0..(num_ray_workers-1) do
+    for i <- 0..(num_ray_workers()-1) do
       IO.puts " starting ray #{i}"
       {:ok, ray} = RayStage.RayWorker.start_link()
-      GenStage.sync_subscribe(render, to: ray, interval: trunc(1000 / 24))
-      GenStage.sync_subscribe(ray, to: feeder, max_demand: trunc(RayStage.Camera.width / 4))
+      GenStage.sync_subscribe(render, to: ray, interval: trunc(1000 / 12))
+      GenStage.sync_subscribe(ray, to: feeder, max_demand: trunc(RayStage.Camera.width / 2))
     end
 
     IO.puts "\n\n\n\n!!!STARTED!!!\n\n\n\n"
